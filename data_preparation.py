@@ -23,7 +23,6 @@ EMOTIONS = {
     8:'surprised'
 }
 
-
 # ----------------------- This section will be added soon ------------------
 # =============================================================================
 # def split_TESS_audio(path):    
@@ -153,7 +152,8 @@ def split_data_val():
                         print(err)
                         continue
 
-def preparation():
+def preparation():    
+       
     if not os.path.exists(TRAIN_DIR):
         os.mkdir(TRAIN_DIR)
         split_RAVDESS_audio(RAVDESS_DIR)
