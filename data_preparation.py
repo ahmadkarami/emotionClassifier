@@ -1,5 +1,6 @@
 import os
 import random
+import re
 import librosa
 import numpy as np
 import shutil as sh
@@ -11,6 +12,9 @@ TEST_DIR = "test"
 TRAIN_DIR = "train"
 VAL_DIR = "validation"
 RAVDESS_DIR = "Ravdess"
+TESS_DIR = "TESS"
+CREMA_DIR = "CREMA"
+SAVEE_DIR = "SAVEE"
 
 EMOTIONS = {
     1:'neutral', 
@@ -23,35 +27,90 @@ EMOTIONS = {
     8:'surprised'
 }
 
-# ----------------------- This section will be added soon ------------------
-# =============================================================================
-# def split_TESS_audio(path):    
-#      key_list = list(TESS_EMOTIONS.keys())
-#      val_list = list(TESS_EMOTIONS.values())
-#      if not os.path.exists(SPLITTED_DATASET):
-#        os.mkdir(SPLITTED_DATASET)
-#        for emo in EMOTIONS:
-#             if not os.path.exists(SPLITTED_DATASET + "/" + EMOTIONS[emo]):
-#                 os.mkdir(SPLITTED_DATASET + "/" + EMOTIONS[emo])        
-#        for subdir, dirs, files in os.walk(path):
-#         for file in files:
-#             position = val_list.index(file.split('.')[0].split('_')[2])
-#             try:
-#                 src = os.path.join(subdir + "/", file)
-#                 ind = key_list[position]
-#                 dst = os.path.join(SPLITTED_DATASET + "/" + EMOTIONS[ind] + "/", file)
-#                 sh.copyfile(src, dst)                
-#             except ValueError as err:
-#                 print(err)
-#                 continue
-# =============================================================================
-# ----------------------- This section will be added soon ------------------
+TESS_EMOTIONS = {
+    1:'neutral',  
+    3:'happy', 
+    4:'sad', 
+    5:'angry', 
+    6:'fear', 
+    7:'disgust', 
+    8:'ps'
+   }
 
+CREMA_EMOTIONS = {
+    1:'NEU',  
+    3:'HAP', 
+    4:'SAD', 
+    5:'ANG', 
+    6:'FEA', 
+    7:'DIS'
+   }
+
+SAVEE_EMOTIONS = {
+    1:'n', 
+    3:'h', 
+    4:'sa', 
+    5:'a', 
+    6:'f', 
+    7:'d', 
+    8:'su'
+}
+
+def split_SAVEE_audio(path):    
+    
+     key_list = list(SAVEE_EMOTIONS.keys())
+     val_list = list(SAVEE_EMOTIONS.values())
+
+     for subdir, dirs, files in os.walk(path):
+       for file in files:
+         fileName = file.split('.')[0]
+         
+         match = re.match(r"([a-z]+)([0-9]+)", fileName, re.I)
+         if match:
+            items = match.groups()
+            try:
+                src = os.path.join(subdir + "/", file)
+                ind = key_list[val_list.index(items[0])]
+                dst = os.path.join(TRAIN_DIR + "/" + EMOTIONS[ind] + "/", file.split('.')[0] + subdir.split('\\')[1] + ".wav")
+                sh.copyfile(src, dst)                
+            except ValueError as err:
+                print(err)
+                continue
+
+def split_CREMA_audio(path):    
+     key_list = list(CREMA_EMOTIONS.keys())
+     val_list = list(CREMA_EMOTIONS.values())
+
+     for subdir, dirs, files in os.walk(path):
+      for file in files:
+         position = val_list.index(file.split('.')[0].split('_')[2])
+         try:
+             src = os.path.join(subdir + "/", file)
+             ind = key_list[position]
+             dst = os.path.join(TRAIN_DIR + "/" + EMOTIONS[ind] + "/", file)
+             sh.copyfile(src, dst)                
+         except ValueError as err:
+             print(err)
+             continue
+
+def split_TESS_audio(path):    
+     key_list = list(TESS_EMOTIONS.keys())
+     val_list = list(TESS_EMOTIONS.values())
+
+     for subdir, dirs, files in os.walk(path):
+      for file in files:
+         position = val_list.index(file.split('.')[0].split('_')[2])
+         try:
+             src = os.path.join(subdir + "/", file)
+             ind = key_list[position]
+             dst = os.path.join(TRAIN_DIR + "/" + EMOTIONS[ind] + "/", file)
+             sh.copyfile(src, dst)                
+         except ValueError as err:
+             print(err)
+             continue
 
 def split_RAVDESS_audio(path):       
-       for emo in EMOTIONS:
-            if not os.path.exists(TRAIN_DIR + "/" + EMOTIONS[emo]):
-                os.mkdir(TRAIN_DIR + "/" + EMOTIONS[emo])        
+
        for subdir, dirs, files in os.walk(path):
         for file in files:
             try:
@@ -132,12 +191,15 @@ def split_data_test():
                         continue
 
 def split_data_val():
+    for subdir, dirs, files in os.walk(TRAIN_DIR):   
+            print(subdir)
     if not os.path.exists(VAL_DIR):
         os.mkdir(VAL_DIR)
         for emo in EMOTIONS:
             if not os.path.exists(VAL_DIR + "/" + EMOTIONS[emo]):
                 os.mkdir(VAL_DIR + "/" + EMOTIONS[emo])            
-        for subdir, dirs, files in os.walk(TRAIN_DIR):            
+        for subdir, dirs, files in os.walk(TRAIN_DIR):   
+            print(subdir)
             x = len(files)
             no = len(files) * 0.15
             if x != 0:
@@ -152,11 +214,18 @@ def split_data_val():
                         print(err)
                         continue
 
-def preparation():    
-       
+def preparation():       
     if not os.path.exists(TRAIN_DIR):
         os.mkdir(TRAIN_DIR)
+        
+        for emo in EMOTIONS:
+          if not os.path.exists(TRAIN_DIR + "/" + EMOTIONS[emo]):
+            os.mkdir(TRAIN_DIR + "/" + EMOTIONS[emo])
+        
+        split_SAVEE_audio(SAVEE_DIR)
+        split_CREMA_audio(CREMA_DIR)
         split_RAVDESS_audio(RAVDESS_DIR)
+        split_TESS_audio(TESS_DIR)
         data_augmentation(TRAIN_DIR)
         create_spectrogram(TRAIN_DIR)
         split_data_test()
