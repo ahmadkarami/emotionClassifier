@@ -1,5 +1,4 @@
 import os
-import numpy as np
 import numpy as asa
 from sklearn.metrics import accuracy_score
 from sklearn.linear_model import LogisticRegression
